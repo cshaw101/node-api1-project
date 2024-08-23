@@ -57,9 +57,51 @@ server.get('/api/users/:id', (req, res) => {
         })
 })
 
-server.delete('/api/users/:id', (req, res) => {
-
+server.delete('/api/users/:id', async (req, res) => {
+const possibleUser = await User.findById(req.params.id)
+if (!possibleUser) {
+    res.status(404).json({
+        message: "The user with the specified ID does not exist",
+    })
+}else {
+    const deletedUser = await User.remove(possibleUser.id)
+    res.status(200).json(deletedUser)
+}
 })
+
+server.put('/api/users/:id', async (req, res) => {
+    try {
+      const possibleUser = await User.findById(req.params.id);
+      
+      // If the user with the specified ID is not found
+      if (!possibleUser) {
+        return res.status(404).json({
+          message: "The user with the specified ID does not exist"
+        });
+      }
+  
+      // If the request body is missing the `name` or `bio` property
+      if (!req.body.name || !req.body.bio) {
+        return res.status(400).json({
+          message: "Please provide name and bio for the user"
+        });
+      }
+  
+      // Update the user information
+      const updatedUser = await User.update(req.params.id, req.body);
+  
+      // If update is successful, return the updated user
+      return res.status(200).json(updatedUser);
+      
+    } catch (err) {
+      // If there's an error during the update process
+      return res.status(500).json({
+        message: "The user information could not be modified",
+        err: err.message,
+      });
+    }
+  });
+  
 
 
 server.use('*', (req, res) => {
